@@ -26,26 +26,50 @@ app.get('/allTasks', (req, res) => {
 
 app.post('/createTask', (req, res) => {
   const task = new Task(req.body);
-  task.save().then(result => {
-    Task.find().then(result => {
-      res.send({ data: result });
+  if (req.body.hasOwnProperty('text') && req.body.hasOwnProperty('isCheck') && (req.body.isCheck === true || req.body.isCheck === false) && req.body.text) {
+    task.save().then(result => {
+      Task.find().then(result => {
+        res.send("Success! The object with the specified parameters was created successfully");
+      });
     });
-  });
+  }
+  else {
+    res.status(422).send(`Error! Please fill in the fields in full`);
+  }
 });
+
 
 app.patch('/updateTask', (req, res) => {
   const body = req.body;
-  Task.updateOne({ _id: req.body._id }, req.body).then(result => {
-    Task.find().then(result => {
-      res.send(result);
-    });
-  });
+  if (body.hasOwnProperty('_id') && (body.hasOwnProperty('text') || body.hasOwnProperty('isCheck'))) {
+    Task.updateOne({ _id: req.body._id }, req.body).then(result => {
+      Task.find().then(result => {
+        res.send("Success! The object with the specified id was successfully modified");
+      });
+    }).catch(err => res.status(404).send(`Error! Sorry, but no such object with this id was found`));
+  }
+  else {
+    res.status(422).send(`Error! Please fill in the fields in full`);
+  };
 });
 
 app.delete('/deleteTask', (req, res) => {
+  if (req.body._id) {
+    Task.deleteOne({ _id: req.body._id }, req.body).then(result => {
+      Task.find().then(result => {
+        res.send("Success! The object with the specified id was successfully deleted");
+      });
+    }).catch(err => res.status(404).send(`Error! Sorry, but no such object with this id was found`));
+  }
+  else {
+    res.status(422).send(`Error! Sorry, but no such object with this id was found`);
+  };
+});
+
+app.delete('/deleteAllTask', (req, res) => {
   Task.remove().then(() => {
     Task.find().then(result => {
-      res.send({ data: result });
+      res.send("Success! All objects were successfully deleted");
     });
   });
 });
